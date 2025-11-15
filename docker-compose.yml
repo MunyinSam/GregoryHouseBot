@@ -1,0 +1,35 @@
+services:
+    db:
+        platform: 'linux/amd64'
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        environment:
+            ACCEPT_EULA: 'Y'
+            SA_PASSWORD : '${SQL_PASSWORD}'
+        ports:
+            - '1433:1433'
+        volumes:
+            - ./mssql/data:/var/opt/mssql/data
+            - ./mssql/log:/var/opt/mssql/log
+            - ./mssql/secrets:/var/opt/mssql/secrets
+        env_file:
+            - path: .env
+              required: true
+        healthcheck:
+            test:
+                [
+                    'CMD',
+                    '/opt/mssql-tools18/bin/sqlcmd',
+                    '-S',
+                    'localhost',
+                    '-U',
+                    'sa',
+                    '-P',
+                    '${SQL_PASSWORD}',
+                    '-Q',
+                    "'SELECT 1'",
+                    '-C',
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 10s
