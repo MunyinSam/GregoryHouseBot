@@ -5,7 +5,8 @@ export interface CreateLearningBlockInput {
 	block_name: string;
 	block_description: string;
 	is_active: boolean;
-	created_date: Date;
+	created_date?: Date;
+	created_by: string;
 }
 
 export interface LearningBlockRow {
@@ -13,7 +14,8 @@ export interface LearningBlockRow {
 	block_name: string;
 	block_description: string;
 	is_active: boolean;
-	created_date: Date;
+	created_date?: Date;
+	created_by: string;
 }
 
 export const createLearningBlock = async (
@@ -31,12 +33,28 @@ export const createLearningBlock = async (
 	request.input('is_active', sql.Bit, input.is_active);
 	request.input('created_date', sql.DateTime2(0), input.created_date);
 
+	// 📢 NEW: Input parameter for created_by
+	request.input('created_by', sql.NVarChar(100), input.created_by);
+
 	const result = await request.query(`
-        INSERT INTO [dbo].[LearningBlock] (block_name, block_description, is_active, created_date)
+        INSERT INTO [dbo].[LearningBlock] (
+            block_name, 
+            block_description, 
+            is_active, 
+            created_date, 
+            created_by
+        )
         OUTPUT INSERTED.*
-        VALUES (@block_name, @block_description, @is_active, @created_date)
+        VALUES (
+            @block_name, 
+            @block_description, 
+            @is_active, 
+            GETDATE(),
+            @created_by
+        )
     `);
 
+	// Assuming the INSERTED table contains 'block_id', map it to 'id' if necessary
 	return result.recordset[0];
 };
 

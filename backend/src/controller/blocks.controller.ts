@@ -6,7 +6,7 @@ const createBlockSchema = z.object({
 	block_name: z.string().min(1).max(100),
 	block_description: z.string().min(1).max(500),
 	is_active: z.boolean(),
-	created_date: z.string().datetime(),
+	created_by: z.string().min(1).max(100),
 });
 
 export const createBlockController = async (
@@ -16,6 +16,7 @@ export const createBlockController = async (
 ) => {
 	try {
 		// Validate input
+		console.log('BODY: ', req.body);
 		const parsed = createBlockSchema.parse(req.body);
 
 		// Create block
@@ -23,7 +24,7 @@ export const createBlockController = async (
 			block_name: parsed.block_name,
 			block_description: parsed.block_description,
 			is_active: parsed.is_active,
-			created_date: new Date(parsed.created_date),
+			created_by: parsed.created_by,
 		});
 
 		return res.status(201).json({
