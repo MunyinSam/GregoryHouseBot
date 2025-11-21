@@ -7,6 +7,7 @@ import * as z from 'zod';
 import { getDbConnection } from './database/mssql.database';
 
 import blockRoute from './routes/blocks.route';
+import questionRoute from './routes/question.route'
 
 (async () => {
 	const cnt = await getDbConnection();
@@ -35,6 +36,7 @@ const apiV1 = express.Router();
 // Create API here
 
 apiV1.use('/blocks', blockRoute);
+apiV1.use('/questions', questionRoute)
 
 app.use('/api/v1', apiV1);
 

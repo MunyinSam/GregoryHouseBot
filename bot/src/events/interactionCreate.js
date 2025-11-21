@@ -6,10 +6,8 @@ const {
     TextInputBuilder,
     TextInputStyle,
 } = require('discord.js')
-const axios = require('axios')
 const { getHostName } = require('../utils/getHostName')
-
-const API_URL = getHostName() + '/blocks'
+const { createBlock, getBlocks } = require('../services/block.service')
 
 module.exports = {
     name: 'interactionCreate',
@@ -52,22 +50,25 @@ module.exports = {
 
         if (interaction.isButton()) {
             if (interaction.customId === 'blocks_button') {
-                const selectOptions = [
-                    new StringSelectMenuOptionBuilder()
-                        .setLabel('Hepatology')
-                        .setDescription('Questions about the Liver.')
-                        .setValue('block_hep'),
+                // Fetch blocks from API
+                let blocks = []
+                try {
+                    blocks = await getBlocks()
+                } catch (error) {
+                    await interaction.reply({
+                        content: 'Failed to fetch blocks from the server.',
+                        ephemeral: true,
+                    })
+                    return
+                }
 
+                // Map blocks to select menu options
+                const selectOptions = blocks.map((block) =>
                     new StringSelectMenuOptionBuilder()
-                        .setLabel('Renal System')
-                        .setDescription('Questions about the Kidneys.')
-                        .setValue('block_renal'),
-
-                    new StringSelectMenuOptionBuilder()
-                        .setLabel('Endocrinology')
-                        .setDescription('Questions about Hormones and Glands.')
-                        .setValue('block_endo'),
-                ]
+                        .setLabel(block.block_name)
+                        .setDescription(block.block_description)
+                        .setValue(block.id?.toString() || block.block_name)
+                )
 
                 const selectMenu = new StringSelectMenuBuilder()
                     .setCustomId('block_select_menu')
@@ -81,37 +82,31 @@ module.exports = {
                     components: [row],
                     ephemeral: true,
                 })
-            } else if (interaction.customId === 'add_block_button') {
-                // Logic for showing the Modal
+            }
+            if (interaction.customId === 'add_block_button') {
                 const modal = new ModalBuilder()
                     .setCustomId('add_block_modal')
-                    .setTitle('Propose a New Medical Block')
+                    .setTitle('Add a Block')
 
                 const blockNameInput = new TextInputBuilder()
                     .setCustomId('blockName')
-                    .setLabel('Block Name (e.g., Cardiology)')
+                    .setLabel('Block Name')
                     .setStyle(TextInputStyle.Short)
                     .setRequired(true)
-                    .setMinLength(3)
 
                 const blockDescriptionInput = new TextInputBuilder()
                     .setCustomId('blockDescription')
-                    .setLabel('Block Description (e.g., Heart & Circulation)')
+                    .setLabel('Block Description')
                     .setStyle(TextInputStyle.Paragraph)
                     .setRequired(true)
-                    .setMinLength(10)
 
-                const firstRow = new ActionRowBuilder().addComponents(
-                    blockNameInput
-                )
-                const secondRow = new ActionRowBuilder().addComponents(
-                    blockDescriptionInput
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(blockNameInput),
+                    new ActionRowBuilder().addComponents(blockDescriptionInput)
                 )
 
-                modal.addComponents(firstRow, secondRow)
-
-                // Show the modal to the user immediately
                 await interaction.showModal(modal)
+                return
             }
             return // Stop processing after handling a button
         }
@@ -121,28 +116,65 @@ module.exports = {
             if (interaction.customId === 'block_select_menu') {
                 const selectedValue = interaction.values[0]
 
-                let responseText = ''
-                switch (selectedValue) {
-                    case 'block_hep':
-                        responseText =
-                            'Ah, Hepatology. We can start with cirrhosis or drug metabolism, unless you prefer to just suffer.'
-                        break
-                    case 'block_renal':
-                        responseText =
-                            "The kidneys. Let's talk electrolytes. It's never lupus."
-                        break
-                    case 'block_endo':
-                        responseText =
-                            'Hormones, the cause of all drama. Ready for some insulin resistance?'
-                        break
-                    default:
-                        responseText =
-                            "You selected something I can't diagnose."
+                // Find the selected block from your blocks API
+                let blocks = []
+                try {
+                    blocks = await getBlocks()
+                } catch (error) {
+                    await interaction.reply({
+                        content: 'Failed to fetch blocks from the server.',
+                        ephemeral: true,
+                    })
+                    return
+                }
+                const selectedBlock = blocks.find(
+                    (block) =>
+                        (block.id?.toString() || block.block_name) ===
+                        selectedValue
+                )
+
+                if (!selectedBlock) {
+                    await interaction.update({
+                        content: "Couldn't find the selected block.",
+                        components: [],
+                        ephemeral: true,
+                    })
+                    return
                 }
 
+                // Create the embed
+                const {
+                    EmbedBuilder,
+                    ButtonBuilder,
+                    ButtonStyle,
+                    ActionRowBuilder,
+                } = require('discord.js')
+                const embed = new EmbedBuilder()
+                    .setTitle(selectedBlock.block_name)
+                    .setDescription(
+                        selectedBlock.block_description ||
+                            'No description provided.'
+                    )
+
+                // Create the buttons
+                const startButton = new ButtonBuilder()
+                    .setCustomId(`start_block_${selectedBlock.id}`)
+                    .setLabel('Start')
+                    .setStyle(ButtonStyle.Primary)
+
+                const addQuestionButton = new ButtonBuilder()
+                    .setCustomId(`add_question_block_${selectedBlock.id}`)
+                    .setLabel('Add Question')
+                    .setStyle(ButtonStyle.Secondary)
+
+                const buttonRow = new ActionRowBuilder().addComponents(
+                    startButton,
+                    addQuestionButton
+                )
+
                 await interaction.update({
-                    content: responseText,
-                    components: [],
+                    embeds: [embed],
+                    components: [buttonRow],
                     ephemeral: true,
                 })
             }
@@ -152,8 +184,6 @@ module.exports = {
         // --- 4. Handle Modal Submissions ---
         if (interaction.isModalSubmit()) {
             if (interaction.customId === 'add_block_modal') {
-                // Defer the reply to give time for the API call (up to 15 minutes)
-                console.log('Creating A New Block')
                 await interaction.deferReply({ ephemeral: true })
 
                 const name = interaction.fields.getTextInputValue('blockName')
@@ -168,15 +198,13 @@ module.exports = {
                 }
 
                 try {
-                    // Send data to the external API
-                    const response = await axios.post(API_URL, newBlockData)
+                    // Use the utility function
+                    const response = await createBlock(newBlockData)
 
-                    // Follow up with success message
                     await interaction.editReply({
                         content: `**Dr. House has grudgingly reviewed your submission.**\nSuccessfully proposed new block: **${name}**.\n\nStatus: \`HTTP ${response.status} OK\``,
                     })
                 } catch (error) {
-                    // Handle API errors
                     console.error(
                         'API Error during block submission:',
                         error.message
@@ -188,12 +216,12 @@ module.exports = {
                         errorMessage = `API Submission Failed (Status ${error.response.status}). Dr. House says, "You made a mistake."`
                     }
 
-                    // Edit the deferred reply with the error message
                     await interaction.editReply({
                         content: errorMessage,
                     })
                 }
             }
+
             return
         }
     },

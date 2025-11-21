@@ -32,8 +32,6 @@ export const createLearningBlock = async (
 	);
 	request.input('is_active', sql.Bit, input.is_active);
 	request.input('created_date', sql.DateTime2(0), input.created_date);
-
-	// 📢 NEW: Input parameter for created_by
 	request.input('created_by', sql.NVarChar(100), input.created_by);
 
 	const result = await request.query(`
