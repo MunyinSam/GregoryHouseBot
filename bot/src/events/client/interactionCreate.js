@@ -1,6 +1,7 @@
 const { Events, InteractionType } = require('discord.js')
 const blocksButtonHandlers = require('../../interactions/buttons/blocksButtonHandler.js')
 const addBlocksButtonHandlers = require('../../interactions/buttons/addBlocksButtonHandler.js')
+const addBlockModalHandler = require('../../interactions/modals/addBlockModalHandler.js')
 
 const buttonHandlers = {
     ...blocksButtonHandlers,
@@ -12,7 +13,7 @@ const selectMenuHandlers = {
     /* ... */
 } // Need to import select menu handlers here when you create them
 const modalHandlers = {
-    /* ... */
+    ...addBlockModalHandler,
 } // Need to import modal handlers here when you create them
 
 module.exports = {

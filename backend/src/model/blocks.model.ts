@@ -39,3 +39,11 @@ export const createLearningBlock = async (
 
 	return result.recordset[0];
 };
+
+export const getLearningBlocks = async (): Promise<LearningBlockRow[]> => {
+	const pool = await getDbConnection();
+	const result = await pool.request().query(`
+        SELECT * FROM [dbo].[LearningBlock]
+    `);
+	return result.recordset;
+};

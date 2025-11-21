@@ -1,43 +1,33 @@
-// interactions/buttons/addBlocksButtonHandler.js
-
 const {
     ModalBuilder,
     TextInputBuilder,
-    ActionRowBuilder,
     TextInputStyle,
+    ActionRowBuilder,
 } = require('discord.js')
 
 module.exports = {
     add_blocks_button: async (interaction) => {
-        // 1. Define the Modal
         const modal = new ModalBuilder()
-            .setCustomId('add_block_modal') // A NEW unique ID for the modal
-            .setTitle('Add a New Block')
+            .setCustomId('add_block_modal')
+            .setTitle('Add a Block')
 
-        // 2. Define the Text Input field
         const blockNameInput = new TextInputBuilder()
             .setCustomId('blockName')
-            .setLabel('What is the name of the new block?')
+            .setLabel('Block Name')
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
 
         const blockDescriptionInput = new TextInputBuilder()
             .setCustomId('blockDescription')
-            .setLabel('Describe the new block.')
+            .setLabel('Block Description')
             .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true)
 
-        // 3. Add inputs to Action Rows
-        const firstActionRow = new ActionRowBuilder().addComponents(
-            blockNameInput
-        )
-        const secondActionRow = new ActionRowBuilder().addComponents(
-            blockDescriptionInput
+        modal.addComponents(
+            new ActionRowBuilder().addComponents(blockNameInput),
+            new ActionRowBuilder().addComponents(blockDescriptionInput)
         )
 
-        // 4. Add rows to the Modal
-        modal.addComponents(firstActionRow, secondActionRow)
-
-        // 5. Show the Modal to the user
         await interaction.showModal(modal)
     },
 }
