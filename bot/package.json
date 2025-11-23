@@ -1,25 +1,26 @@
 {
-  "name": "gregoryhousebot",
-  "version": "1.0.0",
-  "description": "**Gregory House Bot** is a sarcastic Discord bot built for pharmacy and medical students.  \r Ask it pharmacology questions and get quick, informative, and brutally honest replies — just like Dr. Gregory House himself.",
-  "main": "index.js",
-  "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MunyinSam/GregoryHouseBot.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/MunyinSam/GregoryHouseBot/issues"
-  },
-  "homepage": "https://github.com/MunyinSam/GregoryHouseBot#readme",
-  "dependencies": {
-    "discord.js": "^14.24.2",
-    "dotenv": "^17.2.3"
-  }
+    "name": "gregoryhousebot",
+    "version": "1.0.0",
+    "description": "**Gregory House Bot** is a sarcastic Discord bot built for pharmacy and medical students.  \r Ask it pharmacology questions and get quick, informative, and brutally honest replies — just like Dr. Gregory House himself.",
+    "main": "index.js",
+    "scripts": {
+        "start": "node src/register-commands.js && node src/index.js",
+        "dev": "node --watch src/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "register": "node src/register-commands.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/MunyinSam/GregoryHouseBot.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/MunyinSam/GregoryHouseBot/issues"
+    },
+    "homepage": "https://github.com/MunyinSam/GregoryHouseBot#readme",
+    "dependencies": {
+        "discord.js": "^14.24.2",
+        "dotenv": "^17.2.3"
+    }
 }
