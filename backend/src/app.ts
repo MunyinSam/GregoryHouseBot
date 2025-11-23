@@ -6,6 +6,9 @@ import cookieParser from 'cookie-parser';
 import * as z from 'zod';
 import { getDbConnection } from './database/mssql.database';
 
+import blockRoute from './routes/blocks.route';
+import questionRoute from './routes/questions.route'
+
 (async () => {
 	const cnt = await getDbConnection();
 	if (!cnt.connected) {
@@ -31,6 +34,8 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 const apiV1 = express.Router();
 
 // Create API here
+apiV1.use('/blocks', blockRoute);
+apiV1.use('/questions', questionRoute)
 
 app.use('/api/v1', apiV1);
 
